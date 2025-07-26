@@ -1955,10 +1955,6 @@
  static const double home_latitude = 22.279142; // 纬度 (度)
  static const double home_longitude = 113.529025; // 经度 (度)
  
- // 对准阈值
- static const double home_threshold = 30.0; // 家乡对准阈值 (度)
- static const double moon_threshold = 30.0; // 月亮对准阈值 (度)
- 
  // 全局变量
  static float sg_accel_scale = 1.0f; // 加速度计比例因子
  static float sg_current_angle = 0.0f;
@@ -2279,29 +2275,29 @@
      return (float)azimuth;
  }
  
- // 初始化显示对象
+ // 初始化显示对象 - 直接显示标签
  static void init_display(void) {
-     // 创建"moon"标签
+     // 创建"moon"标签 - 直接显示
      sg_moon_label = lv_label_create(lv_scr_act());
      if (sg_moon_label) {
          lv_obj_set_style_text_font(sg_moon_label, &lv_font_montserrat_24, 0);
-         lv_obj_set_style_text_color(sg_moon_label, lv_color_hex(0xFFD700), 0); // 金色
+         lv_obj_set_style_text_color(sg_moon_label, lv_color_hex(0xFFD700), 0);
          lv_label_set_text(sg_moon_label, "MOON");
-         lv_obj_align(sg_moon_label, LV_ALIGN_CENTER, 0, -40); // 居中偏上
-         lv_obj_add_flag(sg_moon_label, LV_OBJ_FLAG_HIDDEN); // 初始隐藏
+         lv_obj_align(sg_moon_label, LV_ALIGN_CENTER, 0, -40);
+         lv_obj_clear_flag(sg_moon_label, LV_OBJ_FLAG_HIDDEN); // 直接显示
      }
      
-     // 创建"you miss home?"标签
+     // 创建"you miss home?"标签 - 直接显示
      sg_home_label = lv_label_create(lv_scr_act());
      if (sg_home_label) {
          lv_obj_set_style_text_font(sg_home_label, &lv_font_montserrat_24, 0);
-         lv_obj_set_style_text_color(sg_home_label, lv_color_hex(0x00FF00), 0); // 绿色
+         lv_obj_set_style_text_color(sg_home_label, lv_color_hex(0x00FF00), 0);
          lv_label_set_text(sg_home_label, "you miss home?");
-         lv_obj_align(sg_home_label, LV_ALIGN_CENTER, 0, -80); // 居中更上方
-         lv_obj_add_flag(sg_home_label, LV_OBJ_FLAG_HIDDEN); // 初始隐藏
+         lv_obj_align(sg_home_label, LV_ALIGN_CENTER, 0, -80);
+         lv_obj_clear_flag(sg_home_label, LV_OBJ_FLAG_HIDDEN); // 直接显示
      }
      
-     // 创建方位角信息标签
+     // 创建方位角信息标签 - 调试用
     //  sg_azimuth_label = lv_label_create(lv_scr_act());
     //  if (sg_azimuth_label) {
     //      lv_obj_set_style_text_font(sg_azimuth_label, &lv_font_montserrat_14, 0);
@@ -2311,103 +2307,42 @@
     //  }
  }
  
- // 检查是否对准目标
- static int check_alignment(float target_az, float current_az, float threshold) {
-     // 计算角度差（考虑圆周性质）
-     float angle_diff = fabs(target_az - current_az);
-     if (angle_diff > 180.0) {
-         angle_diff = 360.0 - angle_diff;
-     }
+ // 更新显示内容 - 简化逻辑
+ static void update_display(float current_az, float moon_az, float home_az) {
+     char buf[64];
      
-     return (angle_diff <= threshold);
+     // 更新方位角信息
+     snprintf(buf, sizeof(buf), "D:%.0f° M:%.0f° H:%.0f°", current_az, moon_az, home_az);
+     if (sg_azimuth_label) {
+         lv_label_set_text(sg_azimuth_label, buf);
+     }
  }
  
- // 更新显示内容
- static void update_display(float current_az, float moon_az, float home_az, 
-    int moon_aligned, int home_aligned) {
-char buf[64];
-uint32_t current_time = tal_system_get_millisecond();
-
-// 更新方位角信息
-snprintf(buf, sizeof(buf), "D:%.0f° M:%.0f° H:%.0f°", 
-current_az, moon_az, home_az);
-lv_label_set_text(sg_azimuth_label, buf);
-
-// 确保在主线程更新UI
-tuya_lvgl_mutex_lock();
-static uint32_t sg_moon_show_start = 0;  // "MOON"标签开始显示的时间
-static uint32_t sg_home_show_start = 0;  // "You miss home?"标签开始显示的时间
-static bool sg_moon_visible = false;     // "MOON"标签当前是否可见
-static bool sg_home_visible = false;     // "You miss home?"标签当前是否可见
-// 处理"MOON"标签显示逻辑
-if (moon_aligned && !sg_moon_visible) {
-    // 首次满足条件，显示标签并记录时间
-    lv_obj_clear_flag(sg_moon_label, LV_OBJ_FLAG_HIDDEN);
-    sg_moon_visible = true;
-    sg_moon_show_start = current_time;
-    } else if (sg_moon_visible && (current_time - sg_moon_show_start >= 3000)) {
-    // 显示时间超过3秒，隐藏标签
-    lv_obj_add_flag(sg_moon_label, LV_OBJ_FLAG_HIDDEN);
-    sg_moon_visible = false;
-    }
-
-    // 处理"you miss home?"标签显示逻辑
-    if (home_aligned && !sg_home_visible) {
-    // 首次满足条件，显示标签并记录时间
-    lv_obj_clear_flag(sg_home_label, LV_OBJ_FLAG_HIDDEN);
-    sg_home_visible = true;
-    sg_home_show_start = current_time;
-    } else if (sg_home_visible && (current_time - sg_home_show_start >= 3000)) {
-    // 显示时间超过3秒，隐藏标签
-    lv_obj_add_flag(sg_home_label, LV_OBJ_FLAG_HIDDEN);
-    sg_home_visible = false;
-    }
-
-    tuya_lvgl_mutex_unlock();
-
-    #if 1
-    PR_DEBUG("MoonAligned: %d (D:%.1f M:%.1f Diff:%.1f)", 
-    moon_aligned, current_az, moon_az, fabs(moon_az - current_az));
-    PR_DEBUG("HomeAligned: %d (D:%.1f H:%.1f Diff:%.1f)", 
-    home_aligned, current_az, home_az, fabs(home_az - current_az));
-    #endif
-}
- // 月亮和家乡追踪任务
+ // 月亮和家乡追踪任务 - 简化逻辑
  static void tracker_task(void *arg) {
      (void)arg;
      PR_DEBUG("Tracker task started");
      
      // 计算家乡方位（只需一次）
      float home_azimuth = calculate_home_direction();
-     PR_DEBUG("Home azimuth: %.2f°", home_azimuth);
      
      while (1) {
          // 获取当前方位
          float current_azimuth;
-          update_display(current_azimuth, moon_azimuth, home_azimuth, 
-                       moon_aligned, home_aligned);
          if (app_compass_get_angle(&current_azimuth) != OPRT_OK) {
-             PR_WARN("Failed to get compass angle");
              tal_system_sleep(1000);
              continue;
          }
          
-         // 计算月亮方位
+         // 更新月亮位置
          float moon_azimuth = calculate_moon_direction();
          
-         // 检查是否对准月亮
-         int moon_aligned = check_alignment(moon_azimuth, current_azimuth, moon_threshold);
-         
-         // 检查是否对准家乡
-         int home_aligned = check_alignment(home_azimuth, current_azimuth, home_threshold);
-         
          // 更新显示
-         update_display(current_azimuth, moon_azimuth, home_azimuth, 
-                        moon_aligned, home_aligned);
+         update_display(current_azimuth, moon_azimuth, home_azimuth);
          
          // 输出调试信息
-         PR_DEBUG("POS: %.1f°, MOON: %.1f°, HOME: %.1f° | MoonAligned: %d, HomeAligned: %d",
-                  current_azimuth, moon_azimuth, home_azimuth, moon_aligned, home_aligned);
+         PR_DEBUG("POS: %.1f°, MOON: %.1f°, HOME: %.1f°", 
+                  current_azimuth, moon_azimuth, home_azimuth);
          
          tal_system_sleep(1000); // 1秒
      }
@@ -2463,7 +2398,7 @@ if (moon_aligned && !sg_moon_visible) {
          lv_image_set_rotation(sg_background_img, 0);
      }
      
-     // 初始化显示
+     // 初始化显示 - 直接显示标签
      init_display();
      
  #if defined(BOARD_CHOICE_WAVESHARE_ESP32_S3_TOUCH_AMOLED_1_8)
