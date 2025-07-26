@@ -48,7 +48,7 @@
 #include "ai_audio.h"
 #include "reset_netcfg.h"
 #include "app_system_info.h"
-#include "qmc5883l.h"
+
 /* Tuya device handle */
 tuya_iot_client_t ai_client;
 
