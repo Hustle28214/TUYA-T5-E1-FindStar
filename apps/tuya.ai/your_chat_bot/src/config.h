@@ -1,0 +1,62 @@
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
+#include "tuya_cloud_types.h"
+#include "tkl_gpio.h"
+/* I2C Config */
+
+#define I2C_NUMBER TUYA_I2C_NUM_0
+#define I2C_SPEED TUYA_IIC_BUS_SPEED_400K
+/* 软件模拟I2C接口，避开20/21引脚 */
+#define I2C_SCL_PIN TUYA_GPIO_PIN_18
+#define I2C_SDA_PIN TUYA_GPIO_PIN_19
+#define MPU6050_ADDRESS 0x68
+#define M_PI 3.14159265358979323846264338327950288
+/* QMC5883L Config */
+
+#define QMC5883L_ADDRESS 0x0D
+#define QMC_ADDR_MODE TUYA_IIC_ADDRESS_7BIT
+#define QMC5883L_REG_X_LSB 0x00
+#define QMC5883L_REG_X_MSB 0x01
+#define QMC5883L_REG_Y_LSB 0x02
+#define QMC5883L_REG_Y_MSB 0x03
+#define QMC5883L_REG_Z_LSB 0x04
+#define QMC5883L_REG_Z_MSB 0x05
+#define QMC5883L_REG_STATUS 0x06
+#define QMC5883L_REG_TEMPERATURE_LSB 0x07
+#define QMC5883L_REG_TEMPERATURE_HSB 0x08
+#define QMC5883L_REG_CONTROL 0x09
+#define QMC5883L_REG_CONTROL_2 0x0A
+#define QMC5883L_REG_RESET 0x0B
+#define QMC5883L_REG_RESERVED 0x0C
+#define QMC5883L_CHIP_ID 0x0D
+/* 注意它们的值存取都是在06H这个寄存器里面 */
+/* DRDY 数据就绪标志位 这是一个引脚*/
+#define QMC5883L_STATUS_DRDY 0x01
+#define QMC5883L_STATUS_OVL 0x02
+/* DOR: Any data has been missed (“1”) or not (“0”) */
+#define QMC5883L_STATUS_DOR 0x04
+
+/* Range values for the CONFIG register */
+#define QMC5883L_CONFIG_2GAUSS 0x0b00000000
+#define QMC5883L_CONFIG_8GAUSS 0x0b00010000
+
+/* QMC5883L Oversampling values*/
+/* 在信号处理中，过采样是指以远远高于信号带宽两倍或其最高频率对其进行采样的过程。*/
+
+#define QMC5883L_CONFIG_OS512 0x0b00000000
+#define QMC5883L_CONFIG_OS256 0x0b01000000
+#define QMC5883L_CONFIG_OS128 0x0b10000000
+#define QMC5883L_CONFIG_OS64  0x0b11000000
+
+/* Mode values for the CONFIG register */
+
+#define QMC5883L_CONFIG_STANDBY 0x0b00000000
+#define QMC5883L_CONFIG_CONT    0x0b00000001
+
+#define QMC5883L_CONFIG_10HZ   0x0b00000000
+#define QMC5883L_CONFIG_50HZ   0x0b00000100
+#define QMC5883L_CONFIG_100HZ  0x0b00001000
+#define QMC5883L_CONFIG_200HZ  0x0b00001100
+
+
+#endif

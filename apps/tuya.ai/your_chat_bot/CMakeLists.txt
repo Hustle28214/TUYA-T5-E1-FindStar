@@ -17,6 +17,8 @@ list(APPEND APP_SRCS ${ai_audio_srcs} ${media_srcs})
 set(APP_INC 
             ${APP_PATH}/assets
             ${APP_PATH}/include
+            ${APP_PATH}/src/QMC5883L
+            ${APP_PATH}/src/MOON
 )
 
 list(APPEND APP_INC "${APP_PATH}/assets")
