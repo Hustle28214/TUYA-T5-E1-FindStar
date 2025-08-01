@@ -44,53 +44,56 @@ static const UI_EYES_EMOJI_T cEYES_EMOJI_LIST[] = {
     {EMOJI_THINKING, &Think128},    {EMOJI_HAPPY, &Happy128},
     {EMOJI_CONFUSED, &Confused128}, {EMOJI_DISAPPOINTED, &Disappointed128},
 };
-
-static lv_obj_t *sg_eyes_gif;
-
+extern const lv_image_dsc_t background;
+// static lv_obj_t *sg_eyes_gif;
+static lv_obj_t *sg_background_img;  // 背景图对象
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
-static lv_img_dsc_t *__ui_eyes_get_img(char *name)
-{
-    int i = 0;
+// static lv_img_dsc_t *__ui_eyes_get_img(char *name)
+// {
+//     int i = 0;
 
-    for (i = 0; i < CNTSOF(cEYES_EMOJI_LIST); i++) {
-        if (0 == strcasecmp(cEYES_EMOJI_LIST[i].name, name)) {
-            return (lv_img_dsc_t *)cEYES_EMOJI_LIST[i].img;
-        }
-    }
+//     for (i = 0; i < CNTSOF(cEYES_EMOJI_LIST); i++) {
+//         if (0 == strcasecmp(cEYES_EMOJI_LIST[i].name, name)) {
+//             return (lv_img_dsc_t *)cEYES_EMOJI_LIST[i].img;
+//         }
+//     }
 
-    return NULL;
-}
+//     return NULL;
+// }
 
 int ui_init(UI_FONT_T *ui_font)
 {
-    lv_img_dsc_t *img = NULL;
-
-    sg_eyes_gif = lv_gif_create(lv_scr_act());
-    img = __ui_eyes_get_img(EMOJI_NEUTRAL);
-    if (NULL == img) {
-        PR_ERR("invalid emotion: %s", EMOJI_NEUTRAL);
-        return OPRT_INVALID_PARM;
+    // 创建背景图对象
+    sg_background_img = lv_image_create(lv_scr_act());
+    if (!sg_background_img) {
+        PR_ERR("Failed to create background image object");
+        return OPRT_COM_ERROR;
     }
-
-    lv_gif_set_src(sg_eyes_gif, img);
-    lv_obj_align(sg_eyes_gif, LV_ALIGN_CENTER, 0, 0);
-
+    
+    // 设置背景图并居中
+    lv_image_set_src(sg_background_img, &background);
+    lv_obj_align(sg_background_img, LV_ALIGN_CENTER, 0, 0);
+    
+    // 设置图片缩放模式
+    lv_image_set_zoom(sg_background_img, 256); // 256 = 100% 缩放
+    lv_image_set_rotation(sg_background_img, 0);
+    
     return OPRT_OK;
 }
 
 void ui_set_emotion(const char *emotion)
 {
-    lv_img_dsc_t *img = NULL;
+    // lv_img_dsc_t *img = NULL;
 
-    img = __ui_eyes_get_img((char *)emotion);
-    if (NULL == img) {
-        PR_ERR("invalid emotion: %s", emotion);
-        return;
-    }
+    // img = __ui_eyes_get_img((char *)emotion);
+    // if (NULL == img) {
+    //     PR_ERR("invalid emotion: %s", emotion);
+    //     return;
+    // }
 
-    lv_gif_set_src(sg_eyes_gif, img);
+    // lv_gif_set_src(sg_eyes_gif, img);
 
     return;
 }

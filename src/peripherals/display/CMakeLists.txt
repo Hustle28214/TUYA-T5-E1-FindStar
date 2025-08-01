@@ -13,6 +13,11 @@ get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
 # LIB_SRCS
 file(GLOB_RECURSE disp_srcs "${MODULE_PATH}/tdl_display/src/*.c")
 
+
+if (CONFIG_ENABLE_I2C STREQUAL "y")
+    file(GLOB_RECURSE tdd_disp_i2c_srcs "${MODULE_PATH}/tdd_display/src/i2c/*.c")
+endif()
+
 if (CONFIG_ENABLE_SPI STREQUAL "y")   
     file(GLOB_RECURSE tdd_disp_spi_srcs "${MODULE_PATH}/tdd_display/src/spi/*.c")
 endif()

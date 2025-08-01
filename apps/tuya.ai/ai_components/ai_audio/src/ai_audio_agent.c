@@ -173,8 +173,10 @@ static OPERATE_RET _parse_nlg(cJSON *json, uint8_t eof)
         if (sg_ai.cbs.ai_agent_msg_cb) {
             sg_ai.cbs.ai_agent_msg_cb(&ai_msg);
         }
+        PR_DEBUG("NLG content: %s", content);
 
         if (eof) {
+            PR_DEBUG("NLG stream end");
             sg_ai.stream_status = AI_AGENT_CHAT_STREAM_STOP;
         }
     }
@@ -288,6 +290,9 @@ static OPERATE_RET _parse_skill(cJSON *json)
 static OPERATE_RET __ai_agent_txt_recv(AI_BIZ_ATTR_INFO_T *attr, AI_BIZ_HEAD_INFO_T *head, char *data, void *usr_data)
 {
     cJSON *json, *node;
+
+    PR_DEBUG("recv text data len:%d", head->len);
+    PR_DEBUG("recv text data %s", data);
 
     if ((json = cJSON_Parse(data)) == NULL) {
         return OPRT_OK;
@@ -651,6 +656,65 @@ OPERATE_RET ai_audio_agent_chat_intrrupt(void)
 
     memset(sg_ai.event_id, 0, AI_UUID_V4_LEN);
     memset(sg_ai.stream_event_id, 0, AI_UUID_V4_LEN);
+
+    return rt;
+}
+
+OPERATE_RET ai_text_agent_upload_stop(void)
+{
+    OPERATE_RET rt = OPRT_OK;
+
+    AI_ATTRIBUTE_T attr[] = {{
+        .type = 1002,
+        .payload_type = ATTR_PT_U16,
+        .length = 2,
+        .value.u16 = TY_AI_CHAT_ID_DS_AUDIO,
+    }};
+    uint8_t *out = NULL;
+    uint32_t out_len = 0;
+    tuya_pack_user_attrs(attr, CNTSOF(attr), &out, &out_len);
+    rt = tuya_ai_event_payloads_end(sg_ai.session_id, sg_ai.event_id, out, out_len);
+    tal_free(out);
+    if (rt != OPRT_OK) {
+        PR_ERR("upload stop failed, rt:%d", rt);
+        return rt;
+    }
+
+    TUYA_CALL_ERR_RETURN(tuya_ai_event_end(sg_ai.session_id, sg_ai.event_id, NULL, 0));
+
+    return rt;
+}
+
+OPERATE_RET ai_text_agent_upload(uint8_t *data, uint32_t len)
+{
+    OPERATE_RET rt = OPRT_OK;
+
+    TUYA_CHECK_NULL_RETURN(data, OPRT_INVALID_PARM);
+    if (len == 0) {
+        PR_ERR("text data length is zero");
+        return OPRT_INVALID_PARM;
+    }
+
+    AI_STREAM_TYPE stype = AI_STREAM_ONE;
+    AI_BIZ_ATTR_INFO_T attr;
+    memset(&attr, 0, SIZEOF(attr));
+    attr.flag = AI_HAS_ATTR;
+    attr.type = AI_PT_TEXT;
+    AI_BIZ_HEAD_INFO_T head;
+    memset(&head, 0, SIZEOF(head));
+    head.stream_flag = stype;
+    head.len = len;
+
+    PR_DEBUG("tuya ai upload text data[%d][%d]...", stype, len);
+    PR_DEBUG("text data: %.*s", len, data);
+
+    ai_audio_agent_upload_start(1);
+
+    tal_system_sleep(100);
+
+    TUYA_CALL_ERR_RETURN(tuya_ai_send_biz_pkt(TY_AI_CHAT_ID_DS_TEXT, &attr, AI_PT_TEXT, &head, (char *)data));
+
+    ai_text_agent_upload_stop();
 
     return rt;
 }

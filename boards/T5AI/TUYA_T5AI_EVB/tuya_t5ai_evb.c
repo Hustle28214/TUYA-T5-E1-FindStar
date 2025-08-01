@@ -13,11 +13,14 @@
 #include "tdd_audio.h"
 #include "tdd_led_gpio.h"
 #include "tdd_button_gpio.h"
-#include "tdd_disp_st7789.h"
+#include "tdd_disp_gc9a01.h"
+#include "tal_wifi.h"
+
+
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
-#define BOARD_SPEAKER_EN_PIN         TUYA_GPIO_NUM_19
+#define BOARD_SPEAKER_EN_PIN         TUYA_GPIO_NUM_39
 
 #define BOARD_BUTTON_PIN             TUYA_GPIO_NUM_4
 #define BOARD_BUTTON_ACTIVE_LV       TUYA_GPIO_LEVEL_LOW
@@ -160,11 +163,27 @@ static OPERATE_RET __board_register_display(void)
     display_cfg.power.pin          = BOARD_LCD_POWER_PIN;
     display_cfg.power.active_level = BOARD_LCD_POWER_ACTIVE_LV;
 
-    TUYA_CALL_ERR_RETURN(tdd_disp_spi_st7789_register(DISPLAY_NAME, &display_cfg));
+    TUYA_CALL_ERR_RETURN(tdd_disp_spi_gc9a01_register(DISPLAY_NAME, &display_cfg));
 #endif
 
     return rt;
 }
+// TODO: Register MPU6050 and Config
+// static OPERATE_RET __board_register_mpu6050(void)
+// {
+//     OPERATE_RET rt = OPRT_OK;
+// #if defined(IMU_NAME)
+
+// #endif
+// }
+
+// static OPERATE_RET __board_register_mpu6050(void)
+// {
+//     OPERATE_RET rt = OPRT_OK;
+// #if defined(IMU_NAME)
+
+// #endif
+// }
 
 /**
  * @brief Registers all the hardware peripherals (audio, button, LED) on the board.
@@ -174,7 +193,8 @@ static OPERATE_RET __board_register_display(void)
 OPERATE_RET board_register_hardware(void)
 {
     OPERATE_RET rt = OPRT_OK;
-
+    // TODO: wifi初始化
+    // 研究一下tal_wifi.h
     TUYA_CALL_ERR_LOG(__board_register_audio());
 
     TUYA_CALL_ERR_LOG(__board_register_button());
